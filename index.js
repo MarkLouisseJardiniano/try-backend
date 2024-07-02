@@ -28,6 +28,10 @@ mongoose
     console.log("Error connecting to MongoDB", err);
   });
 
+app.use('/.netlify/functions/api', router);
+module.exports.handler = serverless(app);
+
+
 const User = require("./models/user");
 
 // Endpoint to register a user
