@@ -14,8 +14,8 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// MongoDB connection setup
-const mongoURI = process.env.MONGODB_URI; // Use environment variable for MongoDB URI
+// Replace with your MongoDB URI directly
+const mongoURI = "mongodb+srv://Hatid:Hatid@cluster0.cg2euxr.mongodb.net/Hatid?retryWrites=true&w=majority&appName=Cluster0"; // Replace with your MongoDB URI
 mongoose
   .connect(mongoURI, {
     useNewUrlParser: true,
@@ -104,7 +104,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ userId: user._id }, "your_jwt_secret_here");
 
     res.status(200).json({ token });
   } catch (error) {
