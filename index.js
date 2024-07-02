@@ -2,25 +2,25 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+const jwt = require("jsonwebtoken");
 
 const app = express();
-const port = 3000;
+const router = express.Router(); // Define router for routes
+
+const port = process.env.PORT || 3000; // Use process.env.PORT for port in serverless environments
 const cors = require("cors");
 app.use(cors());
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-const jwt = require("jsonwebtoken");
 
+// MongoDB connection setup
+const mongoURI = process.env.MONGODB_URI; // Use environment variable for MongoDB URI
 mongoose
-  .connect(
-    "mongodb+srv://Hatid:Hatid@cluster0.cg2euxr.mongodb.net/Hatid?retryWrites=true&w=majority&appName=Cluster0",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
+  .connect(mongoURI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     console.log("Connected to MongoDB");
   })
@@ -28,14 +28,11 @@ mongoose
     console.log("Error connecting to MongoDB", err);
   });
 
-app.use('/.netlify/functions/api', router);
-module.exports.handler = serverless(app);
-
-
+// Sample MongoDB user model import
 const User = require("./models/user");
 
 // Endpoint to register a user
-app.post("/register", async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -71,7 +68,7 @@ app.post("/register", async (req, res) => {
 });
 
 // Endpoint to verify email (sample implementation)
-app.get("/verify/:token", async (req, res) => {
+router.get("/verify/:token", async (req, res) => {
   try {
     const token = req.params.token;
 
@@ -97,18 +94,8 @@ function sendVerificationEmail(email, token) {
   console.log(`Sending verification email to ${email} with token ${token}`);
 }
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
-
-const generateSecretKey = () => {
-  return crypto.randomBytes(32).toString("hex");
-};
-
-const secretKey = generateSecretKey();
-
 // Endpoint to login a user (sample implementation)
-app.post("/login", async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -117,10 +104,16 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const token = jwt.sign({ userId: user._id }, secretKey);
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 
     res.status(200).json({ token });
   } catch (error) {
     res.status(500).json({ message: "Login failed" });
   }
 });
+
+// Mount router with base path for Netlify Functions
+app.use('/.netlify/functions/api', router);
+
+// Export serverless handler
+module.exports.handler = app;
