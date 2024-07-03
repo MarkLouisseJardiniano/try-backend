@@ -1,11 +1,11 @@
 const express = require("express");
+const serverless = require("serverless-http");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
 const app = express();
-const port = 3000;
 const cors = require("cors");
 app.use(cors());
 
@@ -93,10 +93,6 @@ function sendVerificationEmail(email, token) {
   console.log(`Sending verification email to ${email} with token ${token}`);
 }
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
-
 const generateSecretKey = () => {
   return crypto.randomBytes(32).toString("hex");
 };
@@ -120,3 +116,5 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ message: "Login failed" });
   }
 });
+
+module.exports.handler = serverless(app);
